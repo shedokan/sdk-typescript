@@ -62,3 +62,19 @@ export async function childWorkflowCancel(): Promise<void> {
     }
   }
 }
+
+export async function childWfCancelUnawareOfStart(): Promise<void> {
+  try {
+    await CancellationScope.cancellable(async () => {
+      const child = await startChild(signalTarget, {});
+      CancellationScope.current().cancel();
+      await child.result();
+      throw new Error('ChildWorkflow was not cancelled');
+    });
+    throw new Error('Expected CancellationScope to throw ChildWorkflowFailure');
+  } catch (err) {
+    if (!(err instanceof ChildWorkflowFailure && err.cause instanceof CancelledFailure)) {
+      throw err;
+    }
+  }
+}

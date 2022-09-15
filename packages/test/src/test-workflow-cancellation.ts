@@ -10,6 +10,11 @@ import {
   workflowCancellationScenarios,
   WorkflowCancellationScenarioTiming,
 } from './workflows';
+import fs from 'fs';
+import path from 'path';
+import { temporal } from '@temporalio/proto';
+import { historyToJSON } from '@temporalio/common/lib/proto-utils';
+const History = temporal.api.history.v1.History;
 
 export interface Context {
   worker: Worker;
@@ -75,3 +80,19 @@ if (RUN_INTEGRATION_TESTS) {
   test(testWorkflowCancellation, 'fail', 'immediately', ApplicationFailure);
   test(testWorkflowCancellation, 'fail', 'after-cleanup', ApplicationFailure);
 }
+
+test('cancel of an already started child', async (t) => {
+  const histBin = await fs.promises.readFile(
+    path.resolve(__dirname, '../history_files/single_child_wf_cancelled_hist.bin')
+  );
+  const hist = History.decode(histBin);
+  hist.events[0].workflowExecutionStartedEventAttributes!.workflowType!.name = 'childWfCancelUnawareOfStart';
+
+  await Worker.runReplayHistory(
+    {
+      workflowsPath: require.resolve('./workflows'),
+    },
+    hist
+  );
+  t.pass();
+});

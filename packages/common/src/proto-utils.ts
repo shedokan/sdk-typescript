@@ -70,6 +70,10 @@ export function historyFromJSON(history: unknown): History {
   return loaded as any;
 }
 
+export function historyToJSON(history: History): object {
+  return toProto3JSON(patched.temporal.api.history.v1.History.create(history)) as any;
+}
+
 /**
  * JSON representation of Temporal's {@link Payload} protobuf object
  */

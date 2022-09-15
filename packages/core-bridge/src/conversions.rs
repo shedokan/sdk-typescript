@@ -120,8 +120,8 @@ impl ObjectHandleConversionsExt for Handle<'_, JsObject> {
         let span_id = js_value_getter!(ctx, self, "spanId", JsString);
         let trace_flags = js_value_getter!(ctx, self, "traceFlags", JsNumber);
         Ok(SpanContext::new(
-            TraceId::from_hex(&trace_id),
-            SpanId::from_hex(&span_id),
+            TraceId::from_hex(&trace_id).expect("trace id is valid"),
+            SpanId::from_hex(&span_id).expect("span id is valid"),
             TraceFlags::new(trace_flags as u8),
             false,
             TraceState::from_str("").expect("Trace state must be valid"),
