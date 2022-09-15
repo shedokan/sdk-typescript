@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { URL, fileURLToPath } from 'node:url';
 import arg from 'arg';
 import JSON5 from 'json5';
-import * as testing from '../packages/testing/scripts/common.mjs';
+// import * as testing from '../packages/testing/scripts/common.mjs';
 
 const packagesPath = fileURLToPath(new URL('../packages', import.meta.url));
 

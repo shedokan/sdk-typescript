@@ -1,6 +1,6 @@
 import { WorkflowClient, WorkflowFailedError } from '@temporalio/client';
 import { ApplicationFailure, CancelledFailure } from '@temporalio/common';
-import { Worker } from '@temporalio/worker';
+import { DefaultLogger, Worker, Runtime } from '@temporalio/worker';
 import anyTest, { Constructor, Macro, TestInterface } from 'ava';
 import { v4 as uuid4 } from 'uuid';
 import * as activities from './activities';
@@ -13,7 +13,6 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { temporal } from '@temporalio/proto';
-import { historyToJSON } from '@temporalio/common/lib/proto-utils';
 const History = temporal.api.history.v1.History;
 
 export interface Context {
@@ -82,6 +81,15 @@ if (RUN_INTEGRATION_TESTS) {
 }
 
 test('cancel of an already started child', async (t) => {
+  const logger = new DefaultLogger('DEBUG');
+  const runtime = Runtime.install({
+    logger,
+    telemetryOptions: {
+      tracingFilter: 'temporal_sdk_core=DEBUG',
+      logging: { console: {} },
+    },
+  });
+
   const histBin = await fs.promises.readFile(
     path.resolve(__dirname, '../history_files/single_child_wf_cancelled_hist.bin')
   );

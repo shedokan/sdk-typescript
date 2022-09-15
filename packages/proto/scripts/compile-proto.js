@@ -10,7 +10,8 @@ const pbts = require('protobufjs-cli/pbts');
 const outputDir = resolve(__dirname, '../protos');
 const jsOutputFile = resolve(outputDir, 'json-module.js');
 const tempFile = resolve(outputDir, 'temp.js');
-const protoBaseDir = resolve(__dirname, '../../core-bridge/sdk-core/protos');
+// const protoBaseDir = resolve(__dirname, '../../core-bridge/sdk-core/protos');
+const protoBaseDir = resolve(__dirname, '../../../../sdk-core/protos');
 
 const coreProtoPath = resolve(protoBaseDir, 'local/temporal/sdk/core/core_interface.proto');
 const workflowServiceProtoPath = resolve(protoBaseDir, 'api_upstream/temporal/api/workflowservice/v1/service.proto');
