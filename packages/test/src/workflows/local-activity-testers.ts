@@ -83,6 +83,29 @@ export async function runANonExisitingLocalActivity(): Promise<void> {
   await activityNotFound();
 }
 
+export async function commonroomRepro(): Promise<void> {
+  const { fixedSleep } = wf.proxyLocalActivities<typeof activities>({
+    startToCloseTimeout: '10 seconds',
+    retry: { maximumAttempts: 5 },
+  });
+  const { echo } = wf.proxyActivities<typeof activities>({
+    startToCloseTimeout: '1 minute',
+    retry: {
+      maximumAttempts: 50,
+      backoffCoefficient: 1.2,
+      initialInterval: '1 minute',
+    },
+    heartbeatTimeout: '30s',
+  });
+
+  wf.patched('hi');
+
+  await fixedSleep(19 * 1000);
+
+  // Run a normal activity
+  await echo('hi');
+}
+
 export const interceptors: wf.WorkflowInterceptorsFactory = () => {
   return {
     outbound: [

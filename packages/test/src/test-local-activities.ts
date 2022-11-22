@@ -1,6 +1,13 @@
 import { ApplicationFailure, defaultPayloadConverter, WorkflowClient, WorkflowFailedError } from '@temporalio/client';
 import { temporal } from '@temporalio/proto';
-import { bundleWorkflowCode, Worker, WorkflowBundleWithSourceMap as WorkflowBundle } from '@temporalio/worker';
+import {
+  bundleWorkflowCode,
+  DefaultLogger,
+  makeTelemetryFilterString,
+  Runtime,
+  Worker,
+  WorkflowBundleWithSourceMap as WorkflowBundle,
+} from '@temporalio/worker';
 import { isCancellation } from '@temporalio/workflow';
 import anyTest, { TestInterface } from 'ava';
 import { firstValueFrom, Subject } from 'rxjs';
@@ -21,6 +28,16 @@ const test = anyTest as TestInterface<Context>;
 test.before(async (t) => {
   t.context.workflowBundle = await bundleWorkflowCode({
     workflowsPath: require.resolve('./workflows/local-activity-testers'),
+  });
+  const logger = new DefaultLogger('DEBUG');
+  // Use forwarded logging from core
+  Runtime.install({
+    logger,
+    telemetryOptions: {
+      logging: {
+        filter: makeTelemetryFilterString({ core: 'DEBUG', other: 'INFO' }),
+      },
+    },
   });
 });
 
@@ -332,6 +349,17 @@ if (RUN_INTEGRATION_TESTS) {
       );
       t.true(err.cause instanceof ApplicationFailure && !err.cause.nonRetryable);
       t.truthy(err.cause?.message?.startsWith('Activity function activityNotFound is not registered on this Worker'));
+    });
+  });
+
+  test('Commonroom stall repro', async (t) => {
+    const { client, taskQueue, getWorker } = t.context;
+    const worker = await getWorker();
+    await worker.runUntil(async () => {
+      const res = await client.execute(workflows.commonroomRepro, {
+        workflowId: uuid4(),
+        taskQueue,
+      });
     });
   });
 }
