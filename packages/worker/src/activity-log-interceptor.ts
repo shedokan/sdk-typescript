@@ -53,7 +53,11 @@ export class ActivityInboundLogInterceptor implements ActivityInboundCallsInterc
         (error.name === 'CancelledFailure' || error.name === 'AbortError') &&
         this.ctx.cancellationSignal.aborted
       ) {
-        this.logger.debug('Activity completed as cancelled', { durationMs, ...this.logAttributes() });
+        // TODO: Change string based on real cancel or timeout
+        this.logger.debug('Activity completed as cancelled or timed out', {
+          durationMs,
+          ...this.logAttributes(),
+        });
       } else if (typeof error === 'object' && error != null && error.name === 'CompleteAsyncError') {
         this.logger.debug('Activity will complete asynchronously', { durationMs, ...this.logAttributes() });
       } else {

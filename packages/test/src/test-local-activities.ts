@@ -53,6 +53,7 @@ test.beforeEach(async (t) => {
         taskQueue,
         workflowBundle: t.context.workflowBundle,
         activities,
+        maxConcurrentLocalActivityExecutions: 10,
       }),
   };
 });
@@ -355,11 +356,24 @@ if (RUN_INTEGRATION_TESTS) {
   test('Commonroom stall repro', async (t) => {
     const { client, taskQueue, getWorker } = t.context;
     const worker = await getWorker();
-    await worker.runUntil(async () => {
-      const res = await client.execute(workflows.commonroomRepro, {
-        workflowId: uuid4(),
-        taskQueue,
+    try {
+      await worker.runUntil(async () => {
+        const allExecs = [];
+        for (let i = 0; i < 1000; i++) {
+          allExecs.push(
+            client.execute(workflows.commonroomRepro, {
+              workflowId: uuid4(),
+              taskQueue,
+            })
+          );
+        }
+        const res = await Promise.allSettled(allExecs);
+        console.log('All results', res);
       });
-    });
+    } catch (e) {
+      console.log('Worker err', e);
+      t.fail();
+    }
+    t.pass();
   });
 }

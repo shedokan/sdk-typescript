@@ -85,7 +85,7 @@ export async function runANonExisitingLocalActivity(): Promise<void> {
 
 export async function commonroomRepro(): Promise<void> {
   const { fixedSleep } = wf.proxyLocalActivities<typeof activities>({
-    startToCloseTimeout: '10 seconds',
+    startToCloseTimeout: '5 seconds',
     retry: { maximumAttempts: 5 },
   });
   const { echo } = wf.proxyActivities<typeof activities>({
@@ -100,7 +100,13 @@ export async function commonroomRepro(): Promise<void> {
 
   wf.patched('hi');
 
-  await fixedSleep(19 * 1000);
+  try {
+    console.log('About to run LA');
+    await fixedSleep(2 * 1000);
+  } catch (e) {
+    console.log('Made it past LA with err', e);
+    throw e;
+  }
 
   // Run a normal activity
   await echo('hi');
