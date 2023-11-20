@@ -1,6 +1,11 @@
 import { randomUUID } from 'crypto';
 import { ErrorConstructor, ExecutionContext, TestFn } from 'ava';
-import { WorkflowFailedError, WorkflowHandle, WorkflowStartOptions } from '@temporalio/client';
+import {
+  WorkflowFailedError,
+  WorkflowHandle,
+  WorkflowStartOptions,
+  WorkflowUpdateFailedError,
+} from '@temporalio/client';
 import {
   LocalTestWorkflowEnvironmentOptions,
   TestWorkflowEnvironment,
@@ -62,6 +67,7 @@ export interface Helpers {
     fn: T,
     opts: Omit<WorkflowStartOptions<T>, 'taskQueue' | 'workflowId'>
   ): Promise<WorkflowHandle<T>>;
+  assertWorkflowUpdateFailed(p: Promise<any>, errorConstructor: ErrorConstructor, message?: string): Promise<void>;
   assertWorkflowFailedError(p: Promise<any>, errorConstructor: ErrorConstructor, message?: string): Promise<void>;
 }
 
@@ -101,6 +107,19 @@ export function helpers(t: ExecutionContext<Context>): Helpers {
         workflowId: randomUUID(),
         ...opts,
       });
+    },
+    async assertWorkflowUpdateFailed(
+      p: Promise<any>,
+      errorConstructor: ErrorConstructor,
+      message?: string
+    ): Promise<void> {
+      const err: WorkflowUpdateFailedError | undefined = await t.throwsAsync(p, {
+        instanceOf: WorkflowUpdateFailedError,
+      });
+      t.true(err?.cause instanceof errorConstructor);
+      if (message !== undefined) {
+        t.is(err?.cause?.message, message);
+      }
     },
     async assertWorkflowFailedError(
       p: Promise<any>,
